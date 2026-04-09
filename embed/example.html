@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ejemplo — Hera Widget</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: #0a0a0e;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    h1 { font-size: 24px; font-weight: 600; }
+    p { color: rgba(255, 255, 255, 0.5); max-width: 480px; line-height: 1.6; }
+    code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Web del cliente</h1>
+  <p>
+    Esta es una web de ejemplo. El widget de Hera aparece abajo a la derecha.
+    Solo necesitan pegar el <code>&lt;script&gt;</code> antes del cierre de <code>&lt;/body&gt;</code>.
+  </p>
+
+  <!--
+    ═══════════════════════════════════════════
+    ESTO ES LO ÚNICO QUE PEGA EL CLIENTE
+    ═══════════════════════════════════════════
+
+    Atributos disponibles:
+    - data-hera-api       (obligatorio) URL del endpoint de chat
+    - data-hera-name      Nombre del asistente (default: "Hera")
+    - data-hera-avatar    Emoji o letra del avatar (default: "✦")
+    - data-hera-subtitle  Texto bajo el nombre (default: "Online")
+    - data-hera-theme     "dark" | "light" (default: "dark")
+    - data-hera-theme-toggle  "true" para mostrar botón dark/light
+    - data-hera-nudge     "false" para desactivar el tooltip
+    - data-hera-nudge-text  Texto del nudge
+    - data-hera-locale    Idioma: "es", "en", "ca"... (default: "es")
+    - data-hera-empty     Mensaje del estado vacío
+    - data-hera-placeholder  Placeholder del input
+  -->
+  <script
+    src="./dist/widget.js"
+    data-hera-api="https://www.107studio.es/api/chat/hera"
+    data-hera-name="Asistente"
+    data-hera-subtitle="Consultora XYZ"
+    data-hera-theme="dark"
+    data-hera-nudge-text="¿En qué podemos ayudarte?"
+  ></script>
+
+</body>
+</html>

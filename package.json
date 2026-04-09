@@ -1,0 +1,42 @@
+{
+  "name": "@107studio/hera",
+  "version": "1.0.0",
+  "description": "Hera — AI chat widget with dark/light glassmorphism theme",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles": "./src/hera.css"
+  },
+  "files": [
+    "dist",
+    "src/hera.css"
+  ],
+  "scripts": {
+    "build": "tsc && pnpm build:embed",
+    "build:embed": "esbuild embed/entry.tsx --bundle --minify --format=esm --target=es2020 --jsx=automatic --outfile=embed/dist/widget.js --define:process.env.NODE_ENV=\\\"production\\\"",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "@ai-sdk/react": ">=1.0.0",
+    "ai": ">=4.0.0",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@ai-sdk/react": "^3.0.145",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "ai": "^6.0.143",
+    "esbuild": "^0.28.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "MIT"
+}
