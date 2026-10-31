@@ -48,4 +48,8 @@ export interface HeraChatConfig {
   retryText?: string
   /** Additional body params sent with each request */
   extraBody?: Record<string, unknown>
+  /** Brand accent (hex, e.g. "#1a365d"). Default: indigo from hera.css */
+  accentColor?: string
+  /** Lighter accent for highlights (hex). Default: accentColor */
+  accentColorLight?: string
 }
