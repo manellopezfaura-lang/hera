@@ -52,4 +52,20 @@ export interface HeraChatConfig {
   accentColor?: string
   /** Lighter accent for highlights (hex). Default: accentColor */
   accentColorLight?: string
+  /** Logo image for the avatar (falls back to `avatar` if it fails to load) */
+  avatarUrl?: string
+  /** Note under the input, e.g. "Respuestas con IA" */
+  disclaimer?: string
+  /** Privacy policy link shown next to the disclaimer */
+  privacyUrl?: string
+  /** Privacy link text (default: "Privacidad") */
+  privacyLabel?: string
+  /** Trigger distance from the bottom edge on mobile, in px (default: 16) */
+  mobileBottom?: number
+  /** Trigger distance from the right edge on mobile, in px (default: 16) */
+  mobileRight?: number
+  /** CSS selector of host page elements to hide while the chat is open */
+  hideWhileOpen?: string
+  /** Keep the conversation across pages of the same tab (sessionStorage) */
+  persist?: boolean
 }

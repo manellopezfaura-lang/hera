@@ -14,6 +14,17 @@ function colorAttribute(value: string | undefined): string | undefined {
   return value && HEX_COLOR.test(value) ? value : undefined
 }
 
+function httpsAttribute(value: string | undefined): string | undefined {
+  return value && value.startsWith("https://") ? value : undefined
+}
+
+function pixelsAttribute(value: string | undefined): number | undefined {
+  const pixels = Number(value)
+  return value && Number.isFinite(pixels) && pixels >= 0 && pixels <= 400
+    ? pixels
+    : undefined
+}
+
 function init() {
   const script =
     loadingScript ??
@@ -41,6 +52,14 @@ function init() {
     placeholder: script.dataset.heraPlaceholder,
     accentColor: colorAttribute(script.dataset.heraAccent),
     accentColorLight: colorAttribute(script.dataset.heraAccentLight),
+    avatarUrl: httpsAttribute(script.dataset.heraAvatarUrl),
+    disclaimer: script.dataset.heraDisclaimer,
+    privacyUrl: httpsAttribute(script.dataset.heraPrivacyUrl),
+    privacyLabel: script.dataset.heraPrivacyLabel,
+    mobileBottom: pixelsAttribute(script.dataset.heraMobileBottom),
+    mobileRight: pixelsAttribute(script.dataset.heraMobileRight),
+    hideWhileOpen: script.dataset.heraHideWhileOpen,
+    persist: script.dataset.heraPersist === "true",
   }
 
   const container = document.createElement("div")

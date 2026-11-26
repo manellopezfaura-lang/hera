@@ -7,6 +7,8 @@ import { DefaultChatTransport, type UIMessage } from "ai"
 import type { HeraChatConfig, HeraTheme } from "./types"
 import { stripLeadData } from "./lead-data"
 import { parseChatError } from "./chat-error"
+import { formatMessage } from "./format-message"
+import { readStoredChat, writeStoredChat } from "./stored-chat"
 
 function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -42,6 +44,14 @@ export function HeraChatWidget({
   extraBody,
   accentColor,
   accentColorLight,
+  avatarUrl,
+  disclaimer,
+  privacyUrl,
+  privacyLabel = "Privacidad",
+  mobileBottom,
+  mobileRight,
+  hideWhileOpen,
+  persist = false,
 }: HeraChatConfig) {
   const isInline =
     typeof window !== "undefined" &&
@@ -56,18 +66,46 @@ export function HeraChatWidget({
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const sessionId = useMemo(() => generateSessionId(), [])
+  const storageKey = `hera:${apiUrl}`
+  const [storedChat] = useState(() =>
+    persist && typeof window !== "undefined"
+      ? readStoredChat(storageKey)
+      : null,
+  )
+  const hasRestoredChat = (storedChat?.messages.length ?? 0) > 0
+  const sessionId = useMemo(
+    () => storedChat?.sessionId ?? generateSessionId(),
+    [storedChat],
+  )
+  const [avatarFailed, setAvatarFailed] = useState(false)
+  const avatarIsImage = Boolean(avatarUrl) && !avatarFailed
+  const avatarContent = avatarIsImage ? (
+    <img
+      className="hera-avatar-img"
+      src={avatarUrl}
+      alt=""
+      decoding="async"
+      draggable={false}
+      onError={() => setAvatarFailed(true)}
+    />
+  ) : (
+    avatar
+  )
+  const avatarClass = avatarIsImage ? " hera-avatar--image" : ""
 
-  // Color de marca: las variables van en línea para ganar a los temas de hera.css.
-  const accentStyle = useMemo(() => {
-    if (!accentColor) return undefined
-    const light = accentColorLight ?? accentColor
-    return {
-      "--hera-accent": accentColor,
-      "--hera-accent-light": light,
-      "--hera-accent-glow": `color-mix(in srgb, ${light} 40%, transparent)`,
-    } as CSSProperties
-  }, [accentColor, accentColorLight])
+  // Color de marca y posición en móvil: variables en línea para ganar a hera.css.
+  const widgetStyle = useMemo(() => {
+    const vars: Record<string, string> = {}
+    if (accentColor) {
+      const light = accentColorLight ?? accentColor
+      vars["--hera-accent"] = accentColor
+      vars["--hera-accent-light"] = light
+      vars["--hera-accent-glow"] = `color-mix(in srgb, ${light} 40%, transparent)`
+    }
+    if (mobileBottom !== undefined) vars["--hera-mobile-bottom"] = `${mobileBottom}px`
+    if (mobileRight !== undefined) vars["--hera-mobile-right"] = `${mobileRight}px`
+    return Object.keys(vars).length > 0 ? (vars as CSSProperties) : undefined
+  }, [accentColor, accentColorLight, mobileBottom, mobileRight])
 
   const defaultEmpty = `Soy ${assistantName}, pregúntame lo que necesites.`
 
@@ -96,9 +134,35 @@ export function HeraChatWidget({
 
   const { messages, sendMessage, status, error, regenerate } = useChat({
     transport,
+    messages: storedChat?.messages,
   })
 
   const isLoading = status === "streaming" || status === "submitted"
+
+  // Se guarda al terminar cada respuesta, no token a token.
+  useEffect(() => {
+    if (!persist || isLoading) return
+    writeStoredChat(storageKey, { sessionId, messages })
+  }, [persist, isLoading, storageKey, sessionId, messages])
+
+  // Botones flotantes de la web (p. ej. «Llamar») que tapan el chat abierto.
+  useEffect(() => {
+    if (!isOpen || !hideWhileOpen) return
+    let hidden: HTMLElement[]
+    try {
+      hidden = Array.from(document.querySelectorAll<HTMLElement>(hideWhileOpen))
+    } catch {
+      return
+    }
+    const previous = hidden.map((el) => el.style.getPropertyValue("visibility"))
+    hidden.forEach((el) => el.style.setProperty("visibility", "hidden", "important"))
+    return () => {
+      hidden.forEach((el, index) => {
+        if (previous[index]) el.style.setProperty("visibility", previous[index])
+        else el.style.removeProperty("visibility")
+      })
+    }
+  }, [isOpen, hideWhileOpen])
 
   // ── Scroll & focus ──
   const scrollToBottom = useCallback(() => {
@@ -168,13 +232,14 @@ export function HeraChatWidget({
   }, [])
 
   useEffect(() => {
-    if (!enableNudge) return
+    // Con una conversación ya empezada en otra página, el aviso sobra.
+    if (!enableNudge || hasRestoredChat) return
     const showTimer = setTimeout(() => {
       nudgeDismissed.current = false
       setShowNudge(true)
     }, nudgeDelay)
     return () => clearTimeout(showTimer)
-  }, [enableNudge, nudgeDelay])
+  }, [enableNudge, hasRestoredChat, nudgeDelay])
 
   useEffect(() => {
     if (!showNudge) return
@@ -255,7 +320,7 @@ export function HeraChatWidget({
       <div
         ref={panelRef}
         className={`hera-panel ${isOpen ? "hera-panel--open" : ""} ${hasInteracted && !isOpen ? "hera-panel--closed" : ""} ${themeClass}`}
-        style={accentStyle}
+        style={widgetStyle}
         role="dialog"
         aria-label={`Chat con ${assistantName}`}
         tabIndex={-1}
@@ -274,8 +339,11 @@ export function HeraChatWidget({
         {/* Header */}
         <div className="hera-header">
           <div className="hera-header__info">
-            <div className="hera-header__avatar" aria-hidden="true">
-              {avatar}
+            <div
+              className={`hera-header__avatar${avatarClass}`}
+              aria-hidden="true"
+            >
+              {avatarContent}
             </div>
             <div>
               <div className="hera-header__name">{assistantName}</div>
@@ -362,8 +430,11 @@ export function HeraChatWidget({
         <div className="hera-messages">
           {messages.length === 0 && (
             <div className="hera-empty">
-              <div className="hera-empty__icon" aria-hidden="true">
-                {avatar}
+              <div
+                className={`hera-empty__icon${avatarClass}`}
+                aria-hidden="true"
+              >
+                {avatarContent}
               </div>
               <p className="hera-empty__text">
                 {emptyMessage ?? defaultEmpty}
@@ -387,14 +458,17 @@ export function HeraChatWidget({
                 className={`hera-msg ${isUser ? "hera-msg--user" : "hera-msg--assistant"}`}
               >
                 {!isUser && (
-                  <div className="hera-msg__avatar" aria-hidden="true">
-                    {avatar}
+                  <div
+                    className={`hera-msg__avatar${avatarClass}`}
+                    aria-hidden="true"
+                  >
+                    {avatarContent}
                   </div>
                 )}
                 <div
                   className={`hera-msg__bubble ${isUser ? "hera-msg__bubble--user" : "hera-msg__bubble--assistant"}`}
                 >
-                  {displayText}
+                  {isUser ? displayText : formatMessage(displayText)}
                 </div>
               </div>
             )
@@ -402,13 +476,16 @@ export function HeraChatWidget({
           {waitingForText && (
             <div className="hera-msg hera-msg--assistant">
               <div
-                className="hera-msg__avatar"
+                className={`hera-msg__avatar${avatarClass}`}
                 aria-hidden="true"
                 style={{
-                  animation: "hera-spin-slow 2s linear infinite",
+                  // Un logo no gira: pulsa suave mientras llega la respuesta.
+                  animation: avatarIsImage
+                    ? "hera-logo-pulse 1.4s ease-in-out infinite"
+                    : "hera-spin-slow 2s linear infinite",
                 }}
               >
-                {avatar}
+                {avatarContent}
               </div>
               <div className="hera-msg__bubble hera-msg__bubble--assistant">
                 <span className="hera-typing" aria-hidden="true">
@@ -424,11 +501,16 @@ export function HeraChatWidget({
           )}
           {chatError && !isLoading && (
             <div className="hera-msg hera-msg--assistant">
-              <div className="hera-msg__avatar" aria-hidden="true">
-                {avatar}
+              <div
+                className={`hera-msg__avatar${avatarClass}`}
+                aria-hidden="true"
+              >
+                {avatarContent}
               </div>
               <div className="hera-error" role="alert">
-                <p className="hera-error__text">{chatError.message}</p>
+                <p className="hera-error__text">
+                  {formatMessage(chatError.message)}
+                </p>
                 {chatError.retry && (
                   <button
                     className="hera-error__retry"
@@ -473,6 +555,18 @@ export function HeraChatWidget({
               />
             </svg>
           </button>
+          {(disclaimer || privacyUrl) && (
+            <p className="hera-footnote">
+              {disclaimer}
+              {disclaimer && privacyUrl && " · "}
+              {privacyUrl && (
+                <a href={privacyUrl} target="_blank" rel="noopener noreferrer">
+                  {privacyLabel}
+                  <span className="hera-sr-only"> (se abre en otra pestaña)</span>
+                </a>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
@@ -481,7 +575,7 @@ export function HeraChatWidget({
         <div
           ref={nudgeRef}
           className="hera-nudge"
-          style={accentStyle}
+          style={widgetStyle}
           onClick={dismissNudge}
         >
           <span className="hera-nudge__text">
@@ -496,7 +590,7 @@ export function HeraChatWidget({
         <button
           ref={triggerRef}
           className={`hera-trigger ${isOpen ? "hera-trigger--active" : ""}`}
-          style={accentStyle}
+          style={widgetStyle}
           onClick={handleToggle}
           aria-label={
             isOpen ? "Cerrar chat" : `Abrir chat con ${assistantName}`

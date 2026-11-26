@@ -1,3 +1,3 @@
 import type { HeraChatConfig } from "./types";
-export declare function HeraChatWidget({ apiUrl, assistantName, avatar, subtitle, theme: initialTheme, showThemeToggle, showNudge: enableNudge, nudgeText, nudgeDelay, nudgeAutoDismiss, locale, emptyMessage, placeholder, errorText, retryText, extraBody, accentColor, accentColorLight, }: HeraChatConfig): import("react/jsx-runtime").JSX.Element;
+export declare function HeraChatWidget({ apiUrl, assistantName, avatar, subtitle, theme: initialTheme, showThemeToggle, showNudge: enableNudge, nudgeText, nudgeDelay, nudgeAutoDismiss, locale, emptyMessage, placeholder, errorText, retryText, extraBody, accentColor, accentColorLight, avatarUrl, disclaimer, privacyUrl, privacyLabel, mobileBottom, mobileRight, hideWhileOpen, persist, }: HeraChatConfig): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=hera-chat-widget.d.ts.map

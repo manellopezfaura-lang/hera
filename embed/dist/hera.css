@@ -373,8 +373,9 @@
 /* ── Input area ── */
 .hera-input {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px;
+  gap: 4px 8px;
   padding: 12px 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
@@ -450,7 +451,51 @@
   cursor: not-allowed;
 }
 
+/* ── Pie: aviso de IA y privacidad ── */
+.hera-footnote {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.hera-footnote a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color var(--hera-speed-fast) ease;
+}
+
+.hera-footnote a:hover {
+  color: var(--hera-text);
+}
+
+/* ── Enlaces en los mensajes (teléfonos, emails, webs) ── */
+.hera-msg__link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.hera-msg__bubble--assistant .hera-msg__link,
+.hera-error .hera-msg__link {
+  color: var(--hera-accent-light);
+}
+
+.hera-msg__link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.hera-msg__link[href^="tel:"] {
+  white-space: nowrap;
+}
+
 /* ── Focus overrides ── */
+.hera-panel a:focus-visible,
 .hera-panel button:focus-visible,
 .hera-panel textarea:focus-visible,
 .hera-trigger:focus-visible {
@@ -458,9 +503,21 @@
   outline-offset: 2px !important;
 }
 
-.hera-input__field:focus-visible {
+.hera-panel .hera-input__field:focus-visible {
   outline: none !important;
   outline-offset: 0 !important;
+}
+
+.hera-panel .hera-input:focus-within {
+  border-top-color: color-mix(in srgb, var(--hera-accent-light) 55%, transparent);
+}
+
+.hera-panel ::selection {
+  background: color-mix(in srgb, var(--hera-accent-light) 24%, transparent);
+}
+
+.hera-panel .hera-msg__bubble--user::selection {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* ── Error state ── */
@@ -669,6 +726,34 @@
   border-color: rgba(0, 0, 0, 0.15);
 }
 
+.hera-light .hera-footnote {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* ── Avatar con logo ── */
+.hera-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* Un logo no brilla ni crece como la letra: quieto, y un pulso suave al escribir. */
+.hera-panel .hera-avatar--image {
+  filter: none;
+  animation: none;
+}
+
+@keyframes hera-logo-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
 /* ── Nudge tooltip ── */
 .hera-nudge {
   position: fixed;
@@ -730,8 +815,8 @@
 
 @media only screen and (max-width: 640px) {
   .hera-nudge {
-    bottom: 76px;
-    right: 16px;
+    bottom: calc(var(--hera-mobile-bottom, 16px) + 60px);
+    right: var(--hera-mobile-right, 16px);
   }
 
   .hera-nudge__text {
@@ -874,8 +959,12 @@ body.hera-body-lock {
   }
 
   .hera-trigger {
-    bottom: 16px;
-    right: 16px;
+    bottom: var(--hera-mobile-bottom, 16px);
+    right: var(--hera-mobile-right, 16px);
+  }
+
+  .hera-footnote {
+    font-size: 13px;
   }
 
   .hera-panel.hera-light {
@@ -888,5 +977,20 @@ body.hera-body-lock {
 
   .hera-light .hera-input {
     background: rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* ── Movimiento reducido ── */
+@media (prefers-reduced-motion: reduce) {
+  .hera-panel,
+  .hera-panel *,
+  .hera-trigger,
+  .hera-trigger *,
+  .hera-nudge,
+  .hera-nudge * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
