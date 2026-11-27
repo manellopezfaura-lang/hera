@@ -1,6 +1,6 @@
 {
   "name": "@107studio/hera",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Hera — AI chat widget with dark/light glassmorphism theme",
   "type": "module",
   "main": "./dist/index.js",

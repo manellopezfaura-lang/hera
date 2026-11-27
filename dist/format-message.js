@@ -17,9 +17,16 @@ function cleanMarkdown(text) {
         .replace(/^#{1,6}[ \t]+/gm, "")
         .replace(/^[ \t]*[-*][ \t]+/gm, "· ");
 }
-function telHref(phone) {
-    const digits = phone.replace(/[^\d+]/g, "");
-    return `tel:${digits.startsWith("+") ? digits : `+34${digits}`}`;
+// Un móvil español con «WhatsApp» justo delante abre el chat de WhatsApp; el resto, una llamada.
+const WHATSAPP_CONTEXT = /whats\s?app/i;
+const WHATSAPP_LOOKBEHIND = 24;
+function phoneHref(phone, context) {
+    const digits = phone.replace(/\D/g, "");
+    const national = digits.length === 11 && digits.startsWith("34") ? digits.slice(2) : digits;
+    const isMobile = national.startsWith("6") || national.startsWith("7");
+    return isMobile && WHATSAPP_CONTEXT.test(context)
+        ? `https://wa.me/34${national}`
+        : `tel:+34${national}`;
 }
 export function formatMessage(text) {
     const clean = cleanMarkdown(text);
@@ -41,9 +48,9 @@ export function formatMessage(text) {
             : email
                 ? `mailto:${label}`
                 : phone
-                    ? telHref(label)
+                    ? phoneHref(label, clean.slice(Math.max(cursor, start - WHATSAPP_LOOKBEHIND), start))
                     : `https://${label}`;
-        const external = !email && !phone;
+        const external = href.startsWith("https://") || href.startsWith("http://");
         if (start > cursor)
             nodes.push(clean.slice(cursor, start));
         nodes.push(_jsx("a", { className: "hera-msg__link", href: href, ...(external ? { target: "_blank", rel: "noopener noreferrer" } : {}), children: label }, start));

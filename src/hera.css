@@ -490,7 +490,8 @@
   text-decoration-thickness: 2px;
 }
 
-.hera-msg__link[href^="tel:"] {
+.hera-msg__link[href^="tel:"],
+.hera-msg__link[href^="https://wa.me/"] {
   white-space: nowrap;
 }
 
